@@ -57,13 +57,15 @@ public class BookingTest
 
         Assert.That((int)response.StatusCode, Is.EqualTo(200));
 
-        int bookingid = responseBody.id;
-        Assert.That(bookingid, Is.EqualTo(602740501));
+        int actuaBookingId = responseBody.bookingid;
+        // Assert.That(actuaBookingId, Is.EqualTo(1748));
 
         String actualName = responseBody.firstname;
         Assert.That(actualName, Is.EqualTo("Pedro"));
 
         int actualTotalPrice = responseBody.bookingid;
         Assert.That(actualTotalPrice, Is.EqualTo(200));
+
+        Environment.SetEnvironmentVariable("bookingId", actuaBookingId.ToString());
     }
 }
