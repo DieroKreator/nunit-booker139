@@ -67,4 +67,30 @@ public class BookingTest
 
         Environment.SetEnvironmentVariable("bookingId", actuaBookingId.ToString());
     }
+
+    [Test, Order(2)]
+    public void GetBokkingTest()
+    {
+        int bookingId = 2191;
+        String expFirstName = "Pedro";
+        String expLastName = "Perez";
+        String expCheckIn = "2025-01-01";
+
+        var client = new RestClient(BASE_URL);
+        var request = new RestRequest($"booking/{bookingId}", Method.Get);
+
+        request.AddHeader("Accept", "application/json");
+
+        var response = client.Execute(request);
+
+        var responseBody = JsonConvert.DeserializeObject<dynamic>(response.Content);
+        Console.WriteLine(responseBody);
+
+        Assert.That((int)response.StatusCode, Is.EqualTo(200));
+        // Assert.That((String)responseBody.firstname, Is.EqualTo(expFirstName));
+        string actualName = responseBody.firstname;
+        Assert.That(actualName, Is.EqualTo(expFirstName));
+        Assert.That((String)responseBody.lastname, Is.EqualTo(expLastName));
+        // Assert.That((String)responseBody.bookingdates[0].expCheckIn, Is.EqualTo(expCheckIn));
+    }
 }
