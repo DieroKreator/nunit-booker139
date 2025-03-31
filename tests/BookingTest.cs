@@ -7,31 +7,28 @@ namespace Booking;
 public class BookingTest
 {
     private const string BASE_URL = "https://restful-booker.herokuapp.com/";
-    string token = "";
 
-    [Test, Order(0)]
-    public void GetToken()
+    // string token = "";
+    string token = GetAuthToken();
+
+    public static string GetAuthToken()
     {
-        var client = new RestClient(BASE_URL);
+        var options = new RestClientOptions(BASE_URL);
+        var client = new RestClient(options);
         var request = new RestRequest("auth", Method.Post);
 
-        request.AddHeader("Content-Type", "application/json");
+        var credentials = new { username = "admin", password = "password123" };
 
-        var authBody = new
-        {
-            username = "admin", // Default credentials from API docs
-            password = "password123"
-        };
-
-        request.AddJsonBody(authBody);
+        request.AddJsonBody(credentials);
 
         var response = client.Execute(request);
         Console.WriteLine($"Auth Response: {response.Content}");
 
-        var tokenResponse = JsonConvert.DeserializeObject<dynamic>(response.Content);
-        token = tokenResponse.token;
+        var responseBody = JsonConvert.DeserializeObject<dynamic>(response.Content);
+        // token = tokenResponse.token;
 
-        Console.WriteLine($"Token: {token}");
+        // Console.WriteLine($"Token: {token}");
+        return responseBody.token;
     }
 
     [Test, Order(1)]
@@ -46,7 +43,9 @@ public class BookingTest
         request.AddHeader("Accept", "application/json");
         request.AddHeader("Authorization", $"Bearer {token}");
 
-        string jsonBody = File.ReadAllText("/Users/dierokreator/Programming/Interasys/nunit-booker139/fixtures/booking1.json");
+        string jsonBody = File.ReadAllText(
+            "/Users/dierokreator/Programming/Interasys/nunit-booker139/fixtures/booking1.json"
+        );
 
         request.AddBody(jsonBody);
 
@@ -72,7 +71,7 @@ public class BookingTest
     [Test, Order(2)]
     public void GetBookingTest()
     {
-        int bookingId = 3694;
+        int bookingId = 282;
         String expFirstName = "Pedro";
         String expLastName = "Perez";
         String expCheckIn = "2025-01-01";
@@ -99,16 +98,20 @@ public class BookingTest
     [Test, Order(3)]
     public void UpdateBookingTest()
     {
-        int bookingId = 3694;
-        BookingModel bookingModel = new BookingModel();
-        bookingModel.firstname = "Pedro";
-        bookingModel.lastname = "Perez";
-        bookingModel.totalprice = 500;
-        bookingModel.depositpaid = false;
-        bookingModel.bookingdates = new BookingDates();
-        bookingModel.bookingdates.checkin = "2025-01-01";
-        bookingModel.bookingdates.checkout = "2025-01-02";
-        bookingModel.additionalneeds = "Breakfast";
+        int bookingId = 3613;
+        BookingModel bookingModel = new BookingModel
+        {
+            firstname = "Pedro",
+            lastname = "Perez",
+            totalprice = 500,
+            depositpaid = false,
+            bookingdates = new BookingDates
+            {
+                checkin = "2025-01-01",
+                checkout = "2025-01-02"
+            },
+            additionalneeds = "Breakfast"
+        };
 
         var options = new RestClientOptions("https://restful-booker.herokuapp.com/");
         var client = new RestClient(options);
@@ -135,5 +138,24 @@ public class BookingTest
         Assert.That((String)responseBody.bookingdates.checkin, Is.EqualTo("2025-01-01"));
         Assert.That((String)responseBody.bookingdates.checkout, Is.EqualTo("2025-01-02"));
         Assert.That((String)responseBody.additionalneeds, Is.EqualTo("Breakfast"));
+    }
+
+    [Test, Order(4)]
+    public void DeleteBookingTest()
+    {
+        int bookingId = 1716;
+
+        var options = new RestClientOptions("https://restful-booker.herokuapp.com/");
+        var client = new RestClient(options);
+        var request = new RestRequest($"booking/{bookingId}", Method.Delete);
+
+        request.AddHeader("Content-Type", "application/json");
+        request.AddHeader("Accept", "application/json");
+        request.AddHeader("Cookie", "token=" + token);
+
+        var response = client.Execute(request);
+        Console.WriteLine($"Response Content: {response.Content}");
+
+        Assert.That((int)response.StatusCode, Is.EqualTo(201));
     }
 }
