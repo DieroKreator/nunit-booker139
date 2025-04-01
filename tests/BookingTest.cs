@@ -11,6 +11,25 @@ public class BookingTest
     // string token = "";
     string token = GetAuthToken();
 
+    public static IEnumerable<TestCaseData> getTestData()
+    {
+        String caminhoMassa = @"fixtures/pets.csv";
+
+        using var reader = new StreamReader(caminhoMassa);
+
+        // Pula a primeira linha com os cabeçalhos
+        reader.ReadLine();
+
+        while (!reader.EndOfStream)
+        {
+            var line = reader.ReadLine();
+            var values = line.Split(",");
+
+            yield return new TestCaseData(int.Parse(values[0]), int.Parse(values[1]), values[2], values[3], values[4], values[5], values[6], values[7]);
+        }
+
+    }
+
     public static string GetAuthToken()
     {
         var options = new RestClientOptions(BASE_URL);
@@ -157,5 +176,26 @@ public class BookingTest
         Console.WriteLine($"Response Content: {response.Content}");
 
         Assert.That((int)response.StatusCode, Is.EqualTo(201));
+    }
+
+    [TestCaseSource("getTestData", new object[] {}), Order(5)]
+    public void GetBookingTestWithData(string firstName, 
+                                       string lastName, 
+                                       int totalprice, 
+                                       bool depositpaid, 
+                                       object bookingdates, 
+                                       string additionalneeds)
+    {
+        var options = new RestClientOptions("https://restful-booker.herokuapp.com/");
+        var client = new RestClient(options);
+        var request = new RestRequest($"booking", Method.Get);
+
+        request.AddHeader("Content-Type", "application/json");
+        request.AddHeader("Accept", "application/json");
+
+        var response = client.Execute(request);
+        Console.WriteLine($"Response Content: {response.Content}");
+
+        Assert.That((int)response.StatusCode, Is.EqualTo(200));
     }
 }
