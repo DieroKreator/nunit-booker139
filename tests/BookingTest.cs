@@ -13,7 +13,8 @@ public class BookingTest
 
     public static IEnumerable<TestCaseData> getTestData()
     {
-        String caminhoMassa = @"fixtures/pets.csv";
+        String caminhoMassa =
+            @"/Users/dierokreator/Programming/Interasys/nunit-booker139/fixtures/bookings.csv";
 
         using var reader = new StreamReader(caminhoMassa);
 
@@ -26,14 +27,13 @@ public class BookingTest
             var values = line.Split(",");
 
             yield return new TestCaseData(
-                int.Parse(values[0]),
-                int.Parse(values[1]),
-                values[2],
-                values[3],
+                values[0],
+                values[1],
+                int.Parse(values[2]),
+                bool.Parse(values[3]),
                 values[4],
                 values[5],
-                values[6],
-                values[7]
+                values[6]
             );
         }
     }
@@ -211,10 +211,8 @@ public class BookingTest
         request.AddHeader("Accept", "application/json");
         request.AddHeader("Authorization", $"Bearer {token}");
 
-        string jsonBody = File.ReadAllText(
-            "/Users/dierokreator/Programming/Interasys/nunit-booker139/fixtures/bookings.json"
-        );
-
+        String jsonBody = JsonConvert.SerializeObject(bookingModel, Formatting.Indented);
+        Console.WriteLine(jsonBody);
         request.AddBody(jsonBody);
 
         var response = client.Execute<BookingModel>(request);
@@ -228,9 +226,9 @@ public class BookingTest
         int actuaBookingId = responseBody.bookingid;
         Assert.That(actuaBookingId, Is.GreaterThan(0));
         String actualName = responseBody.booking.firstname;
-        Assert.That(actualName, Is.EqualTo(firstName));
+        Assert.That(actualName, Is.EqualTo(bookingModel.firstname));
 
         int actualTotalPrice = responseBody.booking.totalprice;
-        Assert.That(actualTotalPrice, Is.EqualTo(totalprice));
+        Assert.That(actualTotalPrice, Is.EqualTo(bookingModel.totalprice));
     }
 }
