@@ -25,9 +25,17 @@ public class BookingTest
             var line = reader.ReadLine();
             var values = line.Split(",");
 
-            yield return new TestCaseData(int.Parse(values[0]), int.Parse(values[1]), values[2], values[3], values[4], values[5], values[6], values[7]);
+            yield return new TestCaseData(
+                int.Parse(values[0]),
+                int.Parse(values[1]),
+                values[2],
+                values[3],
+                values[4],
+                values[5],
+                values[6],
+                values[7]
+            );
         }
-
     }
 
     public static string GetAuthToken()
@@ -40,7 +48,7 @@ public class BookingTest
 
         request.AddJsonBody(credentials);
 
-        var response = client.Execute(request);
+        var response = client.Execute<BookingModel>(request);
         Console.WriteLine($"Auth Response: {response.Content}");
 
         var responseBody = JsonConvert.DeserializeObject<dynamic>(response.Content);
@@ -68,7 +76,7 @@ public class BookingTest
 
         request.AddBody(jsonBody);
 
-        var response = client.Execute(request);
+        var response = client.Execute<BookingModel>(request);
         Console.WriteLine($"Response Content: {response.Content}");
         var responseBody = JsonConvert.DeserializeObject<dynamic>(response.Content);
 
@@ -101,7 +109,7 @@ public class BookingTest
 
         request.AddHeader("Accept", "application/json");
 
-        var response = client.Execute(request);
+        var response = client.Execute<BookingModel>(request);
 
         var responseBody = JsonConvert.DeserializeObject<dynamic>(response.Content);
         Console.WriteLine(responseBody);
@@ -124,12 +132,8 @@ public class BookingTest
             lastname = "Perez",
             totalprice = 500,
             depositpaid = false,
-            bookingdates = new BookingDates
-            {
-                checkin = "2025-01-01",
-                checkout = "2025-01-02"
-            },
-            additionalneeds = "Breakfast"
+            bookingdates = new BookingDates { checkin = "2025-01-01", checkout = "2025-01-02" },
+            additionalneeds = "Breakfast",
         };
 
         var options = new RestClientOptions("https://restful-booker.herokuapp.com/");
@@ -144,7 +148,7 @@ public class BookingTest
         Console.WriteLine(jsonBody);
         request.AddBody(jsonBody);
 
-        var response = client.Execute(request);
+        var response = client.Execute<BookingModel>(request);
 
         var responseBody = JsonConvert.DeserializeObject<dynamic>(response.Content);
         Console.WriteLine(responseBody);
@@ -172,30 +176,61 @@ public class BookingTest
         request.AddHeader("Accept", "application/json");
         request.AddHeader("Cookie", "token=" + token);
 
-        var response = client.Execute(request);
+        var response = client.Execute<BookingModel>(request);
         Console.WriteLine($"Response Content: {response.Content}");
 
         Assert.That((int)response.StatusCode, Is.EqualTo(201));
     }
 
-    [TestCaseSource("getTestData", new object[] {}), Order(5)]
-    public void GetBookingTestWithData(string firstName, 
-                                       string lastName, 
-                                       int totalprice, 
-                                       bool depositpaid, 
-                                       object bookingdates, 
-                                       string additionalneeds)
+    [TestCaseSource("getTestData", new object[] { }), Order(5)]
+    public void PostBookingDDTest(
+        string firstName,
+        string lastName,
+        int totalprice,
+        bool depositpaid,
+        string checkin,
+        string checkout,
+        string additionalneeds
+    )
     {
+        BookingModel bookingModel = new BookingModel
+        {
+            firstname = firstName,
+            lastname = lastName,
+            totalprice = totalprice,
+            depositpaid = depositpaid,
+            bookingdates = new BookingDates { checkin = checkin, checkout = checkout },
+            additionalneeds = additionalneeds,
+        };
+
         var options = new RestClientOptions("https://restful-booker.herokuapp.com/");
         var client = new RestClient(options);
-        var request = new RestRequest($"booking", Method.Get);
+        var request = new RestRequest("booking", Method.Post);
 
         request.AddHeader("Content-Type", "application/json");
         request.AddHeader("Accept", "application/json");
+        request.AddHeader("Authorization", $"Bearer {token}");
 
-        var response = client.Execute(request);
+        string jsonBody = File.ReadAllText(
+            "/Users/dierokreator/Programming/Interasys/nunit-booker139/fixtures/bookings.json"
+        );
+
+        request.AddBody(jsonBody);
+
+        var response = client.Execute<BookingModel>(request);
         Console.WriteLine($"Response Content: {response.Content}");
+        var responseBody = JsonConvert.DeserializeObject<dynamic>(response.Content);
+
+        Console.WriteLine(responseBody);
 
         Assert.That((int)response.StatusCode, Is.EqualTo(200));
+
+        int actuaBookingId = responseBody.bookingid;
+        Assert.That(actuaBookingId, Is.GreaterThan(0));
+        String actualName = responseBody.booking.firstname;
+        Assert.That(actualName, Is.EqualTo(firstName));
+
+        int actualTotalPrice = responseBody.booking.totalprice;
+        Assert.That(actualTotalPrice, Is.EqualTo(totalprice));
     }
 }
