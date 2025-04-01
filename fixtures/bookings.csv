@@ -1,0 +1,5 @@
+firstname,lastname,totalprice, depositpaid,checkin,checkout,additionalneeds
+Pedro,Alonso,1000,true,2023-10-01,2023-10-05,snacks
+Andrew,Terry,852,true,2023-06-01,2023-10-05,lunch
+Lucas,Grace,895,false,2023-10-01,2023-10-05,breakfast
+Joko,Nadal,8596,true,2023-01-01,2023-10-05,dinner
